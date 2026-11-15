@@ -24,6 +24,9 @@
 
   /* 背景 */
   --bg-base: #eef1f7;
+  /* 页面最上 / 最下边缘的颜色，也用来给 Safari 状态栏和工具栏着色 */
+  --edge-top: #cddcfb;
+  --edge-bottom: #f1d6e6;
   --blob-1: #a8c8ff;
   --blob-2: #f6b8d8;
   --blob-3: #b6ecd9;
@@ -41,7 +44,7 @@
   font-size: 15px;
   line-height: 1.65;
   color: var(--text);
-  background: var(--bg-base);
+  background: var(--edge-bottom);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -63,6 +66,8 @@
     --divider: rgba(255, 255, 255, 0.08);
 
     --bg-base: #0e0f15;
+    --edge-top: #17234b;
+    --edge-bottom: #2a1531;
     --blob-1: #2a4a9a;
     --blob-2: #7a2a6a;
     --blob-3: #1d6a5a;
@@ -119,7 +124,33 @@ textarea:focus-visible {
   min-height: 100%;
   z-index: -1;
   overflow: hidden;
-  background: var(--bg-base);
+  /* 上下两端过渡到边缘色，和 Safari 状态栏 / 工具栏的着色接上 */
+  background: linear-gradient(
+    var(--edge-top) 0%,
+    var(--bg-base) 38%,
+    var(--bg-base) 62%,
+    var(--edge-bottom) 100%
+  );
+}
+
+/* 贴着屏幕上下边缘的纯色条：iOS Safari 会取它们的颜色去填状态栏和底部工具栏 */
+.edge-tint {
+  position: fixed;
+  left: 0;
+  right: 0;
+  z-index: -1;
+  height: 2px;
+  pointer-events: none;
+}
+
+.edge-tint.top {
+  top: 0;
+  background-color: var(--edge-top);
+}
+
+.edge-tint.bottom {
+  bottom: 0;
+  background-color: var(--edge-bottom);
 }
 
 .backdrop span {

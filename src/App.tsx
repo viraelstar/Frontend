@@ -38,6 +38,8 @@ export default function App() {
         <span />
         <span />
       </div>
+      <div className="edge-tint top" aria-hidden="true" />
+      <div className="edge-tint bottom" aria-hidden="true" />
 
       <Sidebar
         conversations={chat.conversations}
