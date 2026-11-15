@@ -91,7 +91,9 @@ export function useConversations() {
 
       try {
         await streamChat({
-          messages: history.map(({ role, content }) => ({ role, content })),
+          messages: history
+            .filter((m) => !m.error && m.content.trim())
+            .map(({ role, content }) => ({ role, content })),
           signal: controller.signal,
           onDelta: (text) => patch((m) => ({ ...m, content: m.content + text })),
         })

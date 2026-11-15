@@ -20,20 +20,30 @@ npm run dev      # 开发
 npm run build    # 打包到 dist/
 ```
 
-## 接入真实 API
+## 接入 API（OpenAI 兼容接口）
 
-目前回复是本地模拟的。接入时只需修改 `src/api/chat.ts` 里的 `streamChat`：
-每收到一段文字调用 `onDelta(text)`，并在 `signal` 中止时停止请求，界面其它部分不需要改。
+1. 打开页面，点击左下角 **API 设置**
+2. 选一个预设（OpenAI / DeepSeek / 通义千问 / Ollama 本地），或手动填写 Base URL
+3. 填入 API Key 和模型名，保存
 
-> 注意：不要把 API Key 直接写进前端代码，建议通过自己的后端转发请求。
+之后就会通过 `POST {Base URL}/chat/completions`（`stream: true`）流式获取回复。
+没填 API Key 时继续使用模拟回复。
+
+也可以复制 `.env.example` 为 `.env`，设置默认的 Base URL 和模型。
+
+注意事项：
+
+- API Key 只保存在当前浏览器的 localStorage 里，请只在自己的设备上使用，不要部署成公开网站让别人用你的 Key。
+- 有些服务商不允许浏览器直接跨域调用（CORS）。遇到「网络请求失败」时，可以换用支持 CORS 的服务，或者通过自己的后端转发。
 
 ## 目录结构
 
 ```
 src/
-  api/chat.ts                 聊天接口（目前为模拟实现）
+  api/chat.ts                 聊天接口：OpenAI 兼容流式请求 + 模拟回复
+  settings.ts                 API 设置的读取与保存
   hooks/useConversations.ts   会话状态、发送 / 停止 / 重新生成
-  components/                 Sidebar、MessageList、Composer、Markdown、图标
+  components/                 Sidebar、MessageList、Composer、SettingsDialog、Markdown、图标
   App.tsx                     页面布局
   index.css                   全部样式（含深色模式、移动端）
 ```

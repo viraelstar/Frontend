@@ -1,5 +1,5 @@
 import type { Conversation } from '../types'
-import { IconPlus, IconTrash } from './icons'
+import { IconPlus, IconSettings, IconTrash } from './icons'
 
 interface Props {
   conversations: Conversation[]
@@ -9,6 +9,9 @@ interface Props {
   onSelect: (id: string) => void
   onDelete: (id: string) => void
   onClose: () => void
+  apiLabel: string
+  apiReady: boolean
+  onOpenSettings: () => void
 }
 
 export function Sidebar({
@@ -19,6 +22,9 @@ export function Sidebar({
   onSelect,
   onDelete,
   onClose,
+  apiLabel,
+  apiReady,
+  onOpenSettings,
 }: Props) {
   return (
     <>
@@ -59,7 +65,16 @@ export function Sidebar({
           )}
         </nav>
 
-        <footer className="sidebar-foot">当前为模拟回复 · 未接入 API</footer>
+        <button type="button" className="settings-btn" onClick={onOpenSettings}>
+          <IconSettings />
+          <span className="settings-text">
+            <span>API 设置</span>
+            <small>
+              <i className={`dot ${apiReady ? 'on' : ''}`} />
+              {apiLabel}
+            </small>
+          </span>
+        </button>
       </aside>
     </>
   )

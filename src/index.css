@@ -174,10 +174,182 @@ textarea:focus-visible {
   color: var(--danger);
 }
 
-.sidebar-foot {
-  padding: 0 12px;
+.settings-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  text-align: left;
+  color: var(--text-soft);
+  transition: background 0.15s;
+}
+
+.settings-btn:hover {
+  background: var(--bg-hover);
+}
+
+.settings-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.35;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.settings-text small {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 12px;
   color: var(--text-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--text-faint);
+}
+
+.dot.on {
+  background: #34c759;
+}
+
+/* ---------- 设置弹窗 ---------- */
+
+.dialog {
+  width: min(480px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--bg);
+  color: var(--text);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+}
+
+.dialog::backdrop {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 22px;
+}
+
+.dialog-body h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.dialog-desc,
+.dialog-note {
+  margin: -6px 0 0;
+  font-size: 13px;
+  color: var(--text-soft);
+}
+
+.dialog-note {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--bg-soft);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.presets button {
+  padding: 4px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 13px;
+  color: var(--text-soft);
+  transition: background 0.15s, color 0.15s;
+}
+
+.presets button:hover {
+  background: var(--bg-soft);
+}
+
+.presets button.active {
+  border-color: var(--text);
+  color: var(--text);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.field-row {
+  display: flex;
+  gap: 6px;
+}
+
+.field input,
+.field textarea {
+  flex: 1;
+  min-width: 0;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-weight: 400;
+  font-size: 14px;
+  resize: vertical;
+}
+
+.field input:focus,
+.field textarea:focus {
+  outline: none;
+  border-color: var(--text-soft);
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.ghost-btn,
+.primary-btn {
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.ghost-btn {
+  border: 1px solid var(--border);
+  color: var(--text-soft);
+}
+
+.ghost-btn:hover {
+  background: var(--bg-soft);
+}
+
+.primary-btn {
+  background: var(--accent);
+  color: var(--accent-text);
+  font-weight: 500;
 }
 
 .scrim {

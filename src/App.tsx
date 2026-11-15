@@ -3,7 +3,9 @@ import { useConversations } from './hooks/useConversations'
 import { Sidebar } from './components/Sidebar'
 import { MessageList } from './components/MessageList'
 import { Composer } from './components/Composer'
+import { SettingsDialog } from './components/SettingsDialog'
 import { IconMenu, IconPlus } from './components/icons'
+import { isConfigured, loadSettings, saveSettings, type ApiSettings } from './settings'
 
 const SUGGESTIONS = [
   '帮我写一封请假邮件',
@@ -16,6 +18,15 @@ export default function App() {
   const chat = useConversations()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const closeSidebar = () => setSidebarOpen(false)
+  const [settings, setSettings] = useState<ApiSettings>(loadSettings)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const apiReady = isConfigured(settings)
+
+  const handleSaveSettings = (s: ApiSettings) => {
+    saveSettings(s)
+    setSettings(s)
+    setSettingsOpen(false)
+  }
 
   const messages = chat.active?.messages ?? []
   const isEmpty = messages.length === 0
@@ -36,6 +47,19 @@ export default function App() {
         }}
         onDelete={chat.remove}
         onClose={closeSidebar}
+        apiReady={apiReady}
+        apiLabel={apiReady ? settings.model : '未配置 · 模拟回复'}
+        onOpenSettings={() => {
+          setSettingsOpen(true)
+          closeSidebar()
+        }}
+      />
+
+      <SettingsDialog
+        open={settingsOpen}
+        settings={settings}
+        onSave={handleSaveSettings}
+        onClose={() => setSettingsOpen(false)}
       />
 
       <main className="main">
