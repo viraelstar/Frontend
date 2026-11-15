@@ -533,6 +533,88 @@ textarea:focus-visible {
   }
 }
 
+/* ---------- 思考过程 ---------- */
+
+.reasoning {
+  margin-bottom: 12px;
+}
+
+.reasoning.open {
+  margin-bottom: 20px;
+}
+
+.reasoning-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 0;
+  font-size: 13.5px;
+  color: var(--text-soft);
+  transition: color 0.15s;
+}
+
+.reasoning-toggle:hover {
+  color: var(--text);
+}
+
+.reasoning-toggle svg {
+  transition: transform 0.2s;
+}
+
+.reasoning.open .reasoning-toggle svg {
+  transform: rotate(90deg);
+}
+
+/* 思考中：文字上扫过一道微光 */
+.reasoning-toggle.thinking span {
+  background: linear-gradient(
+      90deg,
+      var(--text-faint) 0%,
+      var(--text) 50%,
+      var(--text-faint) 100%
+    )
+    0 0 / 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer 1.6s linear infinite;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
+.reasoning-body {
+  margin-top: 8px;
+  padding-left: 14px;
+  border-left: 2px solid var(--border);
+  font-size: 13.5px;
+  color: var(--text-soft);
+}
+
+.reasoning-body .markdown p,
+.reasoning-body .markdown ul,
+.reasoning-body .markdown ol {
+  margin-bottom: 0.6em;
+}
+
+.reasoning-body .markdown > :last-child {
+  margin-bottom: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reasoning-toggle.thinking span {
+    animation: none;
+    color: var(--text-soft);
+    background: none;
+  }
+}
+
 /* ---------- Markdown ---------- */
 
 .markdown > :first-child {

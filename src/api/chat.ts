@@ -3,15 +3,22 @@ import { isConfigured, loadSettings, type ApiSettings } from '../settings'
 
 /**
  * 聊天 API 的统一入口。
- * 每收到一段文本就调用 onDelta(text)，结束时 resolve，signal 中止时停止。
+ * 每收到一段内容就调用 onDelta({ content, reasoning })，结束时 resolve，signal 中止时停止。
  *
  * - 设置里填了 API Key：调用 OpenAI 兼容的 /chat/completions（流式）
  * - 没填：使用本地模拟回复，方便先看界面
  */
+export interface Delta {
+  /** 正式回答 */
+  content?: string
+  /** 思考过程 */
+  reasoning?: string
+}
+
 export interface StreamChatOptions {
   messages: Pick<Message, 'role' | 'content'>[]
   signal: AbortSignal
-  onDelta: (text: string) => void
+  onDelta: (delta: Delta) => void
 }
 
 export async function streamChat(options: StreamChatOptions): Promise<void> {
@@ -21,6 +28,50 @@ export async function streamChat(options: StreamChatOptions): Promise<void> {
 }
 
 // ---------------- OpenAI 兼容接口 ----------------
+
+/**
+ * 把回答里的 <think>…</think> 拆成思考过程。
+ * 流式输出时标签可能被切成两半（比如 "<thi" + "nk>"），所以要留一点缓冲。
+ */
+class ThinkTagParser {
+  private inThink = false
+  private buf = ''
+
+  push(text: string): Delta {
+    this.buf += text
+    let content = ''
+    let reasoning = ''
+    const emit = (t: string) => (this.inThink ? (reasoning += t) : (content += t))
+
+    while (true) {
+      const tag = this.inThink ? '</think>' : '<think>'
+      const idx = this.buf.indexOf(tag)
+      if (idx >= 0) {
+        emit(this.buf.slice(0, idx))
+        this.buf = this.buf.slice(idx + tag.length)
+        this.inThink = !this.inThink
+        continue
+      }
+      // 结尾可能是半个标签，先留着
+      let keep = 0
+      for (let n = Math.min(tag.length - 1, this.buf.length); n > 0; n--) {
+        if (tag.startsWith(this.buf.slice(-n))) {
+          keep = n
+          break
+        }
+      }
+      emit(this.buf.slice(0, this.buf.length - keep))
+      this.buf = this.buf.slice(this.buf.length - keep)
+      return { content, reasoning }
+    }
+  }
+
+  flush(): Delta {
+    const rest = this.buf
+    this.buf = ''
+    return this.inThink ? { reasoning: rest } : { content: rest }
+  }
+}
 
 function endpoint(baseUrl: string) {
   const base = baseUrl.trim().replace(/\/+$/, '')
@@ -78,13 +129,20 @@ async function openAIStream(
   const type = res.headers.get('content-type') ?? ''
   if (!res.body || type.includes('application/json')) {
     const data = await res.json()
-    const text = data?.choices?.[0]?.message?.content
-    if (typeof text === 'string') onDelta(text)
+    const msg = data?.choices?.[0]?.message ?? {}
+    const parser = new ThinkTagParser()
+    const reasoning = msg.reasoning_content ?? msg.reasoning
+    if (typeof reasoning === 'string' && reasoning) onDelta({ reasoning })
+    if (typeof msg.content === 'string') {
+      onDelta(parser.push(msg.content))
+      onDelta(parser.flush())
+    }
     return
   }
 
   const reader = res.body.getReader()
   const decoder = new TextDecoder()
+  const parser = new ThinkTagParser()
   let buffer = ''
 
   const handleLine = (line: string): boolean => {
@@ -95,8 +153,13 @@ async function openAIStream(
     try {
       const json = JSON.parse(data)
       if (json.error) throw new Error(json.error.message ?? JSON.stringify(json.error))
-      const delta = json.choices?.[0]?.delta?.content
-      if (typeof delta === 'string' && delta) onDelta(delta)
+      const delta = json.choices?.[0]?.delta ?? {}
+      // DeepSeek / 通义千问 用 reasoning_content，OpenRouter / Ollama 等用 reasoning
+      const reasoning = delta.reasoning_content ?? delta.reasoning
+      if (typeof reasoning === 'string' && reasoning) onDelta({ reasoning })
+      if (typeof delta.content === 'string' && delta.content) {
+        onDelta(parser.push(delta.content))
+      }
     } catch (err) {
       if (err instanceof SyntaxError) return false // 不完整或非 JSON 的行，跳过
       throw err
@@ -116,6 +179,7 @@ async function openAIStream(
     buffer += decoder.decode()
     if (buffer) handleLine(buffer)
   } finally {
+    onDelta(parser.flush())
     reader.cancel().catch(() => {})
   }
 }
@@ -149,18 +213,36 @@ function buildMockReply(question: string): string {
     '3. 填写 API Key 和模型名称，保存即可',
     '',
     '支持任何 OpenAI 兼容接口，比如 OpenAI、DeepSeek、通义千问、Ollama 等。',
+    '使用推理模型（如 `deepseek-reasoner`）时，上方会显示它的思考过程。',
   ].join('\n')
+}
+
+const MOCK_REASONING = [
+  '用户发来了一条消息，但现在还没有配置 API。',
+  '我应该先说明这是模拟回复，再告诉用户怎么接入真实的接口。',
+  '步骤写成有序列表会比较清楚：打开设置、填 Base URL、填 Key 和模型。',
+  '最后顺便提一下思考过程的显示效果，也就是现在这段文字。',
+].join('\n')
+
+async function typeOut(
+  text: string,
+  signal: AbortSignal,
+  emit: (chunk: string) => void,
+) {
+  let i = 0
+  while (i < text.length) {
+    const step = 1 + Math.floor(Math.random() * 4)
+    emit(text.slice(i, i + step))
+    i += step
+    await sleep(18 + Math.random() * 30, signal)
+  }
 }
 
 async function mockStream({ messages, signal, onDelta }: StreamChatOptions) {
   const last = [...messages].reverse().find((m) => m.role === 'user')
   const reply = buildMockReply(last?.content ?? '')
   await sleep(400, signal)
-  let i = 0
-  while (i < reply.length) {
-    const step = 1 + Math.floor(Math.random() * 4)
-    onDelta(reply.slice(i, i + step))
-    i += step
-    await sleep(18 + Math.random() * 30, signal)
-  }
+  await typeOut(MOCK_REASONING, signal, (reasoning) => onDelta({ reasoning }))
+  await sleep(300, signal)
+  await typeOut(reply, signal, (content) => onDelta({ content }))
 }

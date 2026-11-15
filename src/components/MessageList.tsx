@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Message } from '../types'
 import { Markdown } from './Markdown'
+import { Reasoning } from './Reasoning'
 import { IconCopy, IconRefresh } from './icons'
 
 interface Props {
@@ -63,14 +64,24 @@ export function MessageList({ messages, streamingId, onRegenerate }: Props) {
           }
           return (
             <div key={m.id} className={`msg msg-assistant ${m.error ? 'error' : ''}`}>
+              {m.reasoning && (
+                <Reasoning
+                  text={m.reasoning}
+                  thinking={streaming && !m.content}
+                  durationMs={m.reasoningMs}
+                />
+              )}
               {m.content ? (
                 <Markdown text={m.content} />
               ) : (
-                <div className="typing" aria-label="正在思考">
-                  <span />
-                  <span />
-                  <span />
-                </div>
+                !m.reasoning &&
+                streaming && (
+                  <div className="typing" aria-label="正在思考">
+                    <span />
+                    <span />
+                    <span />
+                  </div>
+                )
               )}
               {!streaming && m.content && (
                 <div className="msg-actions">

@@ -89,13 +89,30 @@ export function useConversations() {
           messages: c.messages.map((m) => (m.id === assistant.id ? fn(m) : m)),
         }))
 
+      let thinkStart: number | null = null
+
       try {
         await streamChat({
           messages: history
             .filter((m) => !m.error && m.content.trim())
             .map(({ role, content }) => ({ role, content })),
           signal: controller.signal,
-          onDelta: (text) => patch((m) => ({ ...m, content: m.content + text })),
+          onDelta: ({ content, reasoning }) => {
+            if (!content && !reasoning) return
+            if (reasoning && thinkStart === null) thinkStart = Date.now()
+            patch((m) => {
+              const next = { ...m }
+              if (reasoning) next.reasoning = (m.reasoning ?? '') + reasoning
+              if (content) {
+                // 思考结束、开始回答：记录思考用时，并去掉开头多余的换行
+                if (thinkStart !== null && next.reasoningMs === undefined)
+                  next.reasoningMs = Date.now() - thinkStart
+                const add = m.content ? content : content.trimStart()
+                next.content = m.content + add
+              }
+              return next
+            })
+          },
         })
       } catch (err) {
         if ((err as Error).name !== 'AbortError') {
@@ -106,6 +123,13 @@ export function useConversations() {
           }))
         }
       } finally {
+        // 只有思考、没有回答（比如被中途停止）时也记录用时
+        if (thinkStart !== null) {
+          const start = thinkStart
+          patch((m) =>
+            m.reasoningMs === undefined ? { ...m, reasoningMs: Date.now() - start } : m,
+          )
+        }
         if (abortRef.current === controller) abortRef.current = null
         setStreamingId(null)
       }
