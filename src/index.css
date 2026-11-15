@@ -92,9 +92,18 @@ body,
   margin: 0;
 }
 
+/* 内容层固定在视口上：文档本身永远不会比屏幕高，iOS 上就不会去拖动整页，
+   手指滑动只会交给消息列表。 */
+#root {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+
 /* iOS 主屏幕 App + 透明状态栏时，100% 高度会少算一个状态栏的高度，
-   导致页面底部露出一截。把这段高度补回来（只加在 html 上，body / #root 跟随）。 */
-html.standalone {
+   导致页面底部露出一截。只把内容层加高，文档高度保持不变。 */
+html.standalone #root {
   height: calc(100% + env(safe-area-inset-top, 0px));
 }
 
@@ -102,6 +111,8 @@ html.standalone {
 body {
   background: transparent;
   overflow: hidden;
+  /* 整页不回弹，避免抢走消息列表的滑动 */
+  overscroll-behavior: none;
 }
 
 button {
@@ -311,7 +322,11 @@ textarea:focus-visible {
 
 .conv-list {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  touch-action: pan-y;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -674,10 +689,12 @@ textarea:focus-visible {
 
 .messages {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
-  /* 上下边缘渐隐，滚到玻璃下面时更柔和 */
-  -webkit-mask: linear-gradient(transparent 0, #000 28px, #000 calc(100% - 28px), transparent);
-  mask: linear-gradient(transparent 0, #000 28px, #000 calc(100% - 28px), transparent);
+  /* 注意：不要在滚动容器上加 mask，iOS WebKit 上会导致手指滑不动 */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  touch-action: pan-y;
 }
 
 .messages-inner {
