@@ -92,6 +92,12 @@ body,
   margin: 0;
 }
 
+/* iOS 主屏幕 App + 透明状态栏时，100% 高度会少算一个状态栏的高度，
+   导致页面底部露出一截。把这段高度补回来（只加在 html 上，body / #root 跟随）。 */
+html.standalone {
+  height: calc(100% + env(safe-area-inset-top, 0px));
+}
+
 /* body 保持透明，否则会盖住 z-index: -1 的背景光斑 */
 body {
   background: transparent;
@@ -120,7 +126,7 @@ textarea:focus-visible {
   top: 0;
   left: 0;
   right: 0;
-  height: 100lvh;
+  height: calc(100lvh + env(safe-area-inset-top, 0px));
   min-height: 100%;
   z-index: -1;
   overflow: hidden;
