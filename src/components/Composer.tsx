@@ -8,6 +8,10 @@ interface Props {
   autoFocusKey?: string | null
 }
 
+// 触屏设备上没有 Shift+Enter 的概念，提示文字简化
+const isTouch =
+  typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches
+
 export function Composer({ streaming, onSend, onStop, autoFocusKey }: Props) {
   const [text, setText] = useState('')
   const ref = useRef<HTMLTextAreaElement>(null)
@@ -65,7 +69,7 @@ export function Composer({ streaming, onSend, onStop, autoFocusKey }: Props) {
           ref={ref}
           rows={1}
           value={text}
-          placeholder="输入消息，Enter 发送，Shift + Enter 换行"
+          placeholder={isTouch ? '输入消息' : '输入消息，Enter 发送，Shift + Enter 换行'}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={onKeyDown}
           aria-label="消息输入框"
