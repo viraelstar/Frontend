@@ -104,7 +104,25 @@ body,
 /* iOS 主屏幕 App + 透明状态栏时，100% 高度会少算一个状态栏的高度，
    导致页面底部露出一截。只把内容层加高，文档高度保持不变。 */
 html.standalone #root {
-  height: calc(100% + env(safe-area-inset-top, 0px));
+  height: var(--app-h, calc(100% + env(safe-area-inset-top, 0px)));
+}
+
+html.standalone .backdrop {
+  height: var(--app-h, 100lvh);
+}
+
+html.standalone .dialog::backdrop {
+  bottom: auto;
+  height: var(--app-h, 100%);
+}
+
+/* 可用的屏幕高度：普通浏览器里是动态视口，主屏幕模式下是屏幕实际高度 */
+:root {
+  --screen-h: 100dvh;
+}
+
+html.standalone {
+  --screen-h: var(--app-h, 100dvh);
 }
 
 /* body 保持透明，否则会盖住 z-index: -1 的背景光斑 */
@@ -443,13 +461,18 @@ textarea:focus-visible {
 
 .dialog {
   width: min(480px, calc(100vw - 32px));
-  max-height: calc(100vh - 32px);
+  /* 扣掉状态栏、底部横条和上下留白 */
+  max-height: calc(
+    min(var(--screen-h), 100dvh) - env(safe-area-inset-top, 0px) -
+      env(safe-area-inset-bottom, 0px) - 32px
+  );
   padding: 0;
   border: none;
   border-radius: 28px;
   color: var(--text);
   background: var(--glass-bg-strong);
-  overflow: auto;
+  /* 玻璃外壳本身不滚动（iOS 上带背景模糊的滚动容器会收不到滑动），由里面的 .dialog-body 滚动 */
+  overflow: hidden;
 }
 
 .dialog[open] {
@@ -474,6 +497,11 @@ textarea:focus-visible {
   flex-direction: column;
   gap: 14px;
   padding: 24px;
+  max-height: inherit;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
 }
 
 .dialog-body h2 {
@@ -1037,8 +1065,20 @@ textarea:focus-visible {
   }
 
   /* iOS 输入框字号小于 16px 时，点进去会自动放大页面 */
-  .composer textarea {
+  .composer textarea,
+  .field input,
+  .field textarea {
     font-size: 16px;
+  }
+
+  /* 手机上弹窗贴在状态栏下面，标题不会被挡住 */
+  .dialog {
+    margin-top: calc(env(safe-area-inset-top, 0px) + 12px);
+  }
+
+  .dialog-body {
+    gap: 12px;
+    padding: 20px 18px;
   }
 
   .mobile-only {
