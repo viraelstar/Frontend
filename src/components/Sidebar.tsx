@@ -29,7 +29,7 @@ export function Sidebar({
   return (
     <>
       <div className={`scrim ${open ? 'show' : ''}`} onClick={onClose} />
-      <aside className={`sidebar ${open ? 'open' : ''}`}>
+      <aside className={`sidebar glass ${open ? 'open' : ''}`}>
         <button type="button" className="new-chat" onClick={onNew}>
           <IconPlus />
           新对话

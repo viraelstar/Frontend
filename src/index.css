@@ -1,43 +1,77 @@
+/* =========================================================
+   液态玻璃风格
+   彩色光斑背景 + 半透明模糊面板 + 高光边缘
+   ========================================================= */
+
 :root {
-  --bg: #ffffff;
-  --bg-soft: #f7f7f8;
-  --bg-hover: #ececee;
-  --border: #e5e5e7;
-  --text: #1d1d1f;
-  --text-soft: #6e6e73;
-  --text-faint: #a1a1a6;
-  --accent: #1d1d1f;
+  /* 文字 */
+  --text: #1c1c1e;
+  --text-soft: rgba(28, 28, 30, 0.64);
+  --text-faint: rgba(28, 28, 30, 0.4);
+
+  /* 玻璃 */
+  --glass-bg: rgba(255, 255, 255, 0.42);
+  --glass-bg-strong: rgba(255, 255, 255, 0.62);
+  --glass-hover: rgba(255, 255, 255, 0.55);
+  --glass-line: rgba(255, 255, 255, 0.55);
+  --glass-rim-a: rgba(255, 255, 255, 0.95);
+  --glass-rim-b: rgba(255, 255, 255, 0.15);
+  --glass-shadow: 0 10px 40px rgba(40, 50, 90, 0.12), 0 2px 6px rgba(40, 50, 90, 0.06);
+  --glass-inner: inset 0 1px 1px rgba(255, 255, 255, 0.7),
+    inset 0 -1px 1px rgba(255, 255, 255, 0.15);
+  --glass-blur: blur(22px) saturate(180%);
+  --divider: rgba(28, 28, 30, 0.08);
+
+  /* 背景 */
+  --bg-base: #eef1f7;
+  --blob-1: #a8c8ff;
+  --blob-2: #f6b8d8;
+  --blob-3: #b6ecd9;
+
+  /* 强调 */
+  --accent: #1c1c1e;
   --accent-text: #ffffff;
-  --bubble: #f2f2f4;
-  --code-bg: #f6f6f7;
+  --code-bg: rgba(255, 255, 255, 0.5);
   --danger: #d93025;
-  --radius: 14px;
-  --sidebar-w: 260px;
+  --ok: #34c759;
 
   color-scheme: light;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', 'PingFang SC',
     'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
   font-size: 15px;
   line-height: 1.65;
   color: var(--text);
-  background: var(--bg);
+  background: var(--bg-base);
   -webkit-font-smoothing: antialiased;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #18181a;
-    --bg-soft: #1f1f22;
-    --bg-hover: #2a2a2e;
-    --border: #2e2e33;
-    --text: #ececef;
-    --text-soft: #a0a0a8;
-    --text-faint: #6b6b73;
-    --accent: #ececef;
-    --accent-text: #18181a;
-    --bubble: #2a2a2e;
-    --code-bg: #111113;
+    --text: #f2f2f7;
+    --text-soft: rgba(242, 242, 247, 0.66);
+    --text-faint: rgba(242, 242, 247, 0.38);
+
+    --glass-bg: rgba(40, 40, 52, 0.38);
+    --glass-bg-strong: rgba(44, 44, 58, 0.62);
+    --glass-hover: rgba(255, 255, 255, 0.1);
+    --glass-line: rgba(255, 255, 255, 0.12);
+    --glass-rim-a: rgba(255, 255, 255, 0.35);
+    --glass-rim-b: rgba(255, 255, 255, 0.04);
+    --glass-shadow: 0 10px 40px rgba(0, 0, 0, 0.35), 0 2px 6px rgba(0, 0, 0, 0.2);
+    --glass-inner: inset 0 1px 1px rgba(255, 255, 255, 0.14),
+      inset 0 -1px 1px rgba(255, 255, 255, 0.03);
+    --divider: rgba(255, 255, 255, 0.08);
+
+    --bg-base: #0e0f15;
+    --blob-1: #2a4a9a;
+    --blob-2: #7a2a6a;
+    --blob-3: #1d6a5a;
+
+    --accent: #f2f2f7;
+    --accent-text: #111114;
+    --code-bg: rgba(0, 0, 0, 0.28);
     --danger: #ff6b5f;
+    --ok: #30d158;
     color-scheme: dark;
   }
 }
@@ -53,8 +87,10 @@ body,
   margin: 0;
 }
 
+/* body 保持透明，否则会盖住 z-index: -1 的背景光斑 */
 body {
-  background: var(--bg);
+  background: transparent;
+  overflow: hidden;
 }
 
 button {
@@ -71,48 +107,156 @@ textarea:focus-visible {
   outline-offset: 2px;
 }
 
+/* ---------- 背景光斑 ---------- */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  background: var(--bg-base);
+}
+
+.backdrop span {
+  position: absolute;
+  width: 55vmax;
+  height: 55vmax;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.75;
+  animation: drift 26s ease-in-out infinite alternate;
+}
+
+.backdrop span:nth-child(1) {
+  top: -20vmax;
+  left: -10vmax;
+  background: var(--blob-1);
+}
+
+.backdrop span:nth-child(2) {
+  bottom: -25vmax;
+  right: -15vmax;
+  background: var(--blob-2);
+  animation-duration: 32s;
+  animation-delay: -8s;
+}
+
+.backdrop span:nth-child(3) {
+  top: 25%;
+  left: 35%;
+  width: 38vmax;
+  height: 38vmax;
+  background: var(--blob-3);
+  opacity: 0.6;
+  animation-duration: 38s;
+  animation-delay: -16s;
+}
+
+@keyframes drift {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(8vmax, 6vmax) scale(1.08);
+  }
+  100% {
+    transform: translate(-6vmax, 10vmax) scale(0.95);
+  }
+}
+
+/* ---------- 玻璃材质 ---------- */
+
+.glass,
+.new-chat,
+.suggestions button,
+.send-btn {
+  position: relative;
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-shadow), var(--glass-inner);
+}
+
+/* 高光边缘：左上亮、中间淡、右下再亮一点，模拟光线在玻璃边缘的折射 */
+.glass::before,
+.new-chat::before,
+.suggestions button::before,
+.send-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    var(--glass-rim-a) 0%,
+    var(--glass-rim-b) 35%,
+    var(--glass-rim-b) 65%,
+    var(--glass-rim-a) 100%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  pointer-events: none;
+}
+
+/* 不支持背景模糊的浏览器：提高不透明度保证可读 */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass,
+  .new-chat,
+  .suggestions button {
+    background: var(--glass-bg-strong);
+  }
+}
+
 /* ---------- 布局 ---------- */
 
 .app {
   display: flex;
+  gap: 12px;
   height: 100%;
+  padding: 12px;
 }
 
 .main {
+  position: relative;
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
   height: 100%;
+  --topbar-h: 64px;
 }
 
 /* ---------- 侧边栏 ---------- */
 
 .sidebar {
-  width: var(--sidebar-w);
+  width: 260px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   gap: 12px;
   padding: 14px 10px;
-  background: var(--bg-soft);
-  border-right: 1px solid var(--border);
+  border-radius: 24px;
 }
 
 .new-chat {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 9px 12px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--bg);
+  padding: 10px 14px;
+  border-radius: 14px;
   font-weight: 500;
-  transition: background 0.15s;
+  box-shadow: var(--glass-inner);
+  transition: background 0.2s, transform 0.2s;
 }
 
 .new-chat:hover {
-  background: var(--bg-hover);
+  background: var(--glass-hover);
+}
+
+.new-chat:active {
+  transform: scale(0.98);
 }
 
 .conv-list {
@@ -132,13 +276,17 @@ textarea:focus-visible {
 .conv-item {
   display: flex;
   align-items: center;
-  border-radius: 8px;
-  transition: background 0.15s;
+  border-radius: 12px;
+  transition: background 0.2s;
 }
 
-.conv-item:hover,
+.conv-item:hover {
+  background: var(--glass-hover);
+}
+
 .conv-item.active {
-  background: var(--bg-hover);
+  background: var(--glass-bg-strong);
+  box-shadow: var(--glass-inner), 0 2px 8px rgba(40, 50, 90, 0.06);
 }
 
 .conv-title {
@@ -158,7 +306,7 @@ textarea:focus-visible {
   width: 30px;
   height: 30px;
   margin-right: 4px;
-  border-radius: 6px;
+  border-radius: 8px;
   color: var(--text-faint);
   opacity: 0;
   transition: opacity 0.15s, color 0.15s;
@@ -179,14 +327,14 @@ textarea:focus-visible {
   align-items: center;
   gap: 10px;
   padding: 8px 12px;
-  border-radius: 10px;
+  border-radius: 14px;
   text-align: left;
   color: var(--text-soft);
-  transition: background 0.15s;
+  transition: background 0.2s;
 }
 
 .settings-btn:hover {
-  background: var(--bg-hover);
+  background: var(--glass-hover);
 }
 
 .settings-text {
@@ -218,7 +366,12 @@ textarea:focus-visible {
 }
 
 .dot.on {
-  background: #34c759;
+  background: var(--ok);
+  box-shadow: 0 0 6px var(--ok);
+}
+
+.scrim {
+  display: none;
 }
 
 /* ---------- 设置弹窗 ---------- */
@@ -227,31 +380,43 @@ textarea:focus-visible {
   width: min(480px, calc(100vw - 32px));
   max-height: calc(100vh - 32px);
   padding: 0;
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  background: var(--bg);
+  border: none;
+  border-radius: 28px;
   color: var(--text);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+  background: var(--glass-bg-strong);
+  overflow: auto;
+}
+
+.dialog[open] {
+  animation: pop 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
 }
 
 .dialog::backdrop {
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(20, 20, 30, 0.18);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
 }
 
 .dialog-body {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  padding: 22px;
+  padding: 24px;
 }
 
 .dialog-body h2 {
   margin: 0;
-  font-size: 18px;
+  font-size: 19px;
 }
 
-.dialog-desc,
-.dialog-note {
+.dialog-desc {
   margin: -6px 0 0;
   font-size: 13px;
   color: var(--text-soft);
@@ -260,10 +425,12 @@ textarea:focus-visible {
 .dialog-note {
   margin: 0;
   padding: 10px 12px;
-  border-radius: 10px;
-  background: var(--bg-soft);
+  border-radius: 14px;
+  background: var(--glass-bg);
+  box-shadow: var(--glass-inner);
   font-size: 12px;
   line-height: 1.6;
+  color: var(--text-soft);
 }
 
 .presets {
@@ -273,21 +440,23 @@ textarea:focus-visible {
 }
 
 .presets button {
-  padding: 4px 12px;
-  border: 1px solid var(--border);
+  padding: 5px 13px;
   border-radius: 999px;
   font-size: 13px;
   color: var(--text-soft);
-  transition: background 0.15s, color 0.15s;
+  background: var(--glass-bg);
+  box-shadow: var(--glass-inner);
+  transition: background 0.2s, color 0.2s;
 }
 
 .presets button:hover {
-  background: var(--bg-soft);
+  background: var(--glass-hover);
+  color: var(--text);
 }
 
 .presets button.active {
-  border-color: var(--text);
-  color: var(--text);
+  background: var(--accent);
+  color: var(--accent-text);
 }
 
 .field {
@@ -307,21 +476,24 @@ textarea:focus-visible {
 .field textarea {
   flex: 1;
   min-width: 0;
-  padding: 9px 12px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--bg);
+  padding: 10px 13px;
+  border: 1px solid var(--glass-line);
+  border-radius: 14px;
+  background: var(--glass-bg);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
   color: var(--text);
   font: inherit;
   font-weight: 400;
   font-size: 14px;
   resize: vertical;
+  transition: border-color 0.2s, background 0.2s;
 }
 
 .field input:focus,
 .field textarea:focus {
   outline: none;
-  border-color: var(--text-soft);
+  border-color: var(--text-faint);
+  background: var(--glass-bg-strong);
 }
 
 .dialog-actions {
@@ -332,18 +504,20 @@ textarea:focus-visible {
 
 .ghost-btn,
 .primary-btn {
-  padding: 8px 16px;
-  border-radius: 10px;
+  padding: 9px 18px;
+  border-radius: 999px;
   font-size: 14px;
+  transition: background 0.2s, transform 0.15s;
 }
 
 .ghost-btn {
-  border: 1px solid var(--border);
+  background: var(--glass-bg);
+  box-shadow: var(--glass-inner);
   color: var(--text-soft);
 }
 
 .ghost-btn:hover {
-  background: var(--bg-soft);
+  background: var(--glass-hover);
 }
 
 .primary-btn {
@@ -352,27 +526,35 @@ textarea:focus-visible {
   font-weight: 500;
 }
 
-.scrim {
-  display: none;
+.ghost-btn:active,
+.primary-btn:active {
+  transform: scale(0.97);
 }
 
-/* ---------- 顶栏 ---------- */
+/* ---------- 顶栏（悬浮） ---------- */
 
 .topbar {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 5;
+  transform: translateX(-50%);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  width: min(760px, 100%);
   height: 52px;
-  padding: 0 16px;
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
+  padding: 0 8px;
+  border-radius: 999px;
 }
 
 .topbar-title {
   flex: 1;
   margin: 0;
+  padding: 0 12px;
   font-size: 15px;
   font-weight: 600;
+  text-align: center;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -381,14 +563,15 @@ textarea:focus-visible {
 .icon-btn {
   display: grid;
   place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
   color: var(--text-soft);
+  transition: background 0.2s;
 }
 
 .icon-btn:hover {
-  background: var(--bg-hover);
+  background: var(--glass-hover);
 }
 
 .mobile-only {
@@ -403,13 +586,13 @@ textarea:focus-visible {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 24px;
-  padding: 24px 16px;
+  gap: 26px;
+  padding: var(--topbar-h) 16px var(--composer-h, 120px);
 }
 
 .welcome h2 {
   margin: 0;
-  font-size: 26px;
+  font-size: 28px;
   font-weight: 600;
   letter-spacing: -0.01em;
 }
@@ -423,18 +606,18 @@ textarea:focus-visible {
 }
 
 .suggestions button {
-  padding: 12px 14px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  padding: 14px 16px;
+  border-radius: 18px;
   text-align: left;
   font-size: 14px;
   color: var(--text-soft);
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.2s, color 0.2s, transform 0.2s;
 }
 
 .suggestions button:hover {
-  background: var(--bg-soft);
+  background: var(--glass-hover);
   color: var(--text);
+  transform: translateY(-2px);
 }
 
 /* ---------- 消息 ---------- */
@@ -442,12 +625,15 @@ textarea:focus-visible {
 .messages {
   flex: 1;
   overflow-y: auto;
+  /* 上下边缘渐隐，滚到玻璃下面时更柔和 */
+  -webkit-mask: linear-gradient(transparent 0, #000 28px, #000 calc(100% - 28px), transparent);
+  mask: linear-gradient(transparent 0, #000 28px, #000 calc(100% - 28px), transparent);
 }
 
 .messages-inner {
   max-width: 760px;
   margin: 0 auto;
-  padding: 28px 20px 12px;
+  padding: calc(var(--topbar-h) + 20px) 20px calc(var(--composer-h, 120px) + 12px);
   display: flex;
   flex-direction: column;
   gap: 26px;
@@ -461,8 +647,8 @@ textarea:focus-visible {
 .bubble {
   max-width: 80%;
   padding: 10px 16px;
-  border-radius: 18px;
-  background: var(--bubble);
+  border-radius: 22px 22px 6px 22px;
+  background: var(--glass-bg-strong);
   white-space: pre-wrap;
   word-break: break-word;
 }
@@ -486,15 +672,15 @@ textarea:focus-visible {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 4px 8px;
-  border-radius: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
   font-size: 12.5px;
   color: var(--text-faint);
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.2s, color 0.2s;
 }
 
 .msg-action:hover {
-  background: var(--bg-hover);
+  background: var(--glass-bg);
   color: var(--text);
 }
 
@@ -547,14 +733,18 @@ textarea:focus-visible {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 2px 0;
-  font-size: 13.5px;
+  padding: 4px 12px 4px 14px;
+  border-radius: 999px;
+  font-size: 13px;
   color: var(--text-soft);
-  transition: color 0.15s;
+  background: var(--glass-bg);
+  box-shadow: var(--glass-inner);
+  transition: color 0.2s, background 0.2s;
 }
 
 .reasoning-toggle:hover {
   color: var(--text);
+  background: var(--glass-hover);
 }
 
 .reasoning-toggle svg {
@@ -590,9 +780,9 @@ textarea:focus-visible {
 }
 
 .reasoning-body {
-  margin-top: 8px;
-  padding-left: 14px;
-  border-left: 2px solid var(--border);
+  margin-top: 10px;
+  padding: 2px 0 2px 14px;
+  border-left: 2px solid var(--glass-line);
   font-size: 13.5px;
   color: var(--text-soft);
 }
@@ -605,14 +795,6 @@ textarea:focus-visible {
 
 .reasoning-body .markdown > :last-child {
   margin-bottom: 0;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .reasoning-toggle.thinking span {
-    animation: none;
-    color: var(--text-soft);
-    background: none;
-  }
 }
 
 /* ---------- Markdown ---------- */
@@ -644,28 +826,29 @@ textarea:focus-visible {
 }
 
 .markdown code {
-  padding: 0.1em 0.4em;
-  border-radius: 5px;
+  padding: 0.1em 0.45em;
+  border-radius: 6px;
   background: var(--code-bg);
-  border: 1px solid var(--border);
+  border: 1px solid var(--glass-line);
   font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
   font-size: 0.88em;
 }
 
 .codeblock {
   margin: 0 0 0.9em;
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  border: 1px solid var(--glass-line);
+  border-radius: 16px;
   overflow: hidden;
   background: var(--code-bg);
+  box-shadow: var(--glass-inner);
 }
 
 .codeblock-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 6px 12px;
-  border-bottom: 1px solid var(--border);
+  padding: 6px 14px;
+  border-bottom: 1px solid var(--divider);
   font-size: 12px;
   color: var(--text-faint);
 }
@@ -693,30 +876,29 @@ textarea:focus-visible {
   line-height: 1.6;
 }
 
-/* ---------- 输入框 ---------- */
+/* ---------- 输入框（悬浮） ---------- */
 
 .composer {
-  flex-shrink: 0;
-  width: 100%;
-  max-width: 760px;
-  margin: 0 auto;
-  padding: 8px 20px 14px;
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  z-index: 5;
+  transform: translateX(-50%);
+  width: min(760px, 100%);
+  padding: 0 0 2px;
 }
 
 .composer-box {
   display: flex;
   align-items: flex-end;
   gap: 8px;
-  padding: 8px 8px 8px 16px;
-  border: 1px solid var(--border);
-  border-radius: 22px;
-  background: var(--bg);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-  transition: border-color 0.15s;
+  padding: 8px 8px 8px 18px;
+  border-radius: 28px;
+  transition: background 0.2s;
 }
 
 .composer-box:focus-within {
-  border-color: var(--text-faint);
+  background: var(--glass-bg-strong);
 }
 
 .composer textarea {
@@ -728,7 +910,7 @@ textarea:focus-visible {
   color: var(--text);
   font: inherit;
   line-height: 1.5;
-  padding: 6px 0;
+  padding: 7px 0;
   max-height: 200px;
 }
 
@@ -739,13 +921,18 @@ textarea:focus-visible {
 .send-btn {
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
+  width: 38px;
+  height: 38px;
   flex-shrink: 0;
   border-radius: 50%;
   background: var(--accent);
   color: var(--accent-text);
-  transition: opacity 0.15s;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), var(--glass-inner);
+  transition: opacity 0.2s, transform 0.15s;
+}
+
+.send-btn:not(:disabled):active {
+  transform: scale(0.92);
 }
 
 .send-btn:disabled {
@@ -754,30 +941,52 @@ textarea:focus-visible {
 }
 
 .composer-hint {
-  margin: 8px 0 0;
+  margin: 6px 0 0;
   text-align: center;
-  font-size: 12px;
+  font-size: 11.5px;
   color: var(--text-faint);
+}
+
+/* ---------- 减少动效 ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .backdrop span,
+  .typing span {
+    animation: none;
+  }
+
+  .reasoning-toggle.thinking span {
+    animation: none;
+    color: var(--text-soft);
+    background: none;
+  }
 }
 
 /* ---------- 移动端 ---------- */
 
 @media (max-width: 768px) {
+  .app {
+    padding: 8px;
+  }
+
   .mobile-only {
     display: grid;
   }
 
   .sidebar {
     position: fixed;
-    inset: 0 auto 0 0;
+    top: 8px;
+    bottom: 8px;
+    left: 8px;
     z-index: 20;
-    transform: translateX(-100%);
-    transition: transform 0.22s ease;
+    width: min(280px, calc(100vw - 48px));
+    background: var(--glass-bg-strong);
+    transform: translateX(calc(-100% - 16px));
+    transition: transform 0.28s cubic-bezier(0.2, 0.9, 0.3, 1);
   }
 
   .sidebar.open {
     transform: none;
-    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.12);
   }
 
   .scrim {
@@ -785,10 +994,12 @@ textarea:focus-visible {
     position: fixed;
     inset: 0;
     z-index: 10;
-    background: rgba(0, 0, 0, 0.3);
+    background: rgba(20, 20, 30, 0.15);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.22s;
+    transition: opacity 0.25s;
   }
 
   .scrim.show {
@@ -796,12 +1007,13 @@ textarea:focus-visible {
     pointer-events: auto;
   }
 
-  .topbar {
-    padding: 0 8px;
+  .main {
+    --topbar-h: 56px;
   }
 
-  .topbar-title {
-    text-align: center;
+  .topbar {
+    height: 48px;
+    padding: 0 5px;
   }
 
   .suggestions {
@@ -809,11 +1021,8 @@ textarea:focus-visible {
   }
 
   .messages-inner {
-    padding: 20px 16px 8px;
-  }
-
-  .composer {
-    padding: 8px 12px 12px;
+    padding-left: 10px;
+    padding-right: 10px;
   }
 
   .bubble {

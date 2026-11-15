@@ -41,7 +41,7 @@ export function SettingsDialog({ open, settings, onSave, onClose }: Props) {
   return (
     <dialog
       ref={ref}
-      className="dialog"
+      className="dialog glass"
       onClose={onClose}
       onClick={(e) => e.target === ref.current && onClose()}
     >

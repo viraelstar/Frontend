@@ -58,7 +58,7 @@ export function MessageList({ messages, streamingId, onRegenerate }: Props) {
           if (m.role === 'user') {
             return (
               <div key={m.id} className="msg msg-user">
-                <div className="bubble">{m.content}</div>
+                <div className="bubble glass">{m.content}</div>
               </div>
             )
           }

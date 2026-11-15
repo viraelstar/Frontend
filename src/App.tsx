@@ -33,6 +33,12 @@ export default function App() {
 
   return (
     <div className="app">
+      <div className="backdrop" aria-hidden="true">
+        <span />
+        <span />
+        <span />
+      </div>
+
       <Sidebar
         conversations={chat.conversations}
         activeId={chat.active?.id ?? null}
@@ -63,7 +69,7 @@ export default function App() {
       />
 
       <main className="main">
-        <header className="topbar">
+        <header className="topbar glass">
           <button
             type="button"
             className="icon-btn mobile-only"

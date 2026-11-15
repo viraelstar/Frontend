@@ -11,6 +11,19 @@ interface Props {
 export function Composer({ streaming, onSend, onStop, autoFocusKey }: Props) {
   const [text, setText] = useState('')
   const ref = useRef<HTMLTextAreaElement>(null)
+  const formRef = useRef<HTMLFormElement>(null)
+
+  // 输入框浮在消息上方：把它的高度告诉父元素，消息列表据此留出底部空间
+  useEffect(() => {
+    const form = formRef.current
+    const host = form?.parentElement
+    if (!form || !host) return
+    const ro = new ResizeObserver(() =>
+      host.style.setProperty('--composer-h', `${form.offsetHeight}px`),
+    )
+    ro.observe(form)
+    return () => ro.disconnect()
+  }, [])
 
   // 自动调整高度
   useEffect(() => {
@@ -40,13 +53,14 @@ export function Composer({ streaming, onSend, onStop, autoFocusKey }: Props) {
 
   return (
     <form
+      ref={formRef}
       className="composer"
       onSubmit={(e) => {
         e.preventDefault()
         submit()
       }}
     >
-      <div className="composer-box">
+      <div className="composer-box glass">
         <textarea
           ref={ref}
           rows={1}
