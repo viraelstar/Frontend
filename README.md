@@ -38,6 +38,20 @@ npm run build    # 打包到 dist/
 - API Key 只保存在当前浏览器的 localStorage 里，请只在自己的设备上使用，不要部署成公开网站让别人用你的 Key。
 - 有些服务商不允许浏览器直接跨域调用（CORS）。遇到「网络请求失败」时，可以换用支持 CORS 的服务，或者通过自己的后端转发。
 
+## 部署
+
+线上地址：https://frontend.viraelandnoeforever.com
+
+部署在 VPS 上，由 Caddy 直接托管静态文件（`/var/www/frontend`），HTTPS 证书由 Caddy 自动申请和续期。
+代码更新推送后，在服务器上运行：
+
+```bash
+sudo deploy-frontend            # 默认拉取 claude/blissful-darwin-lp6s1k 分支
+sudo deploy-frontend main       # 或指定其他分支
+```
+
+脚本会拉取代码、构建并发布；上一个版本保留在 `/var/www/frontend.old`，需要回退时交换两个目录即可。
+
 ## 目录结构
 
 ```
