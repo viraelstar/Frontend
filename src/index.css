@@ -101,28 +101,22 @@ body,
   right: 0;
 }
 
-/* iOS 主屏幕 App + 透明状态栏时，100% 高度会少算一个状态栏的高度，
-   导致页面底部露出一截。只把内容层加高，文档高度保持不变。 */
-html.standalone #root {
-  height: var(--app-h, calc(100% + env(safe-area-inset-top, 0px)));
-}
-
+/* iOS 主屏幕 App + 透明状态栏时，iOS 把网页上移到状态栏后面，但没有加长网页，
+   屏幕最下面约一个状态栏高的区域不属于网页（只显示 html 的背景色，网页画不进去）。
+   所以：
+   - 背景在网页底边正好过渡到 html 背景色，让那一截看起来是页面的延续；
+   - 底部横条落在那一截里，不用再给它留安全距离。 */
 html.standalone .backdrop {
-  height: var(--app-h, 100lvh);
+  height: 100%;
 }
 
-html.standalone .dialog::backdrop {
-  bottom: auto;
-  height: var(--app-h, 100%);
+html.standalone .app {
+  --safe-bottom: 0px;
 }
 
-/* 可用的屏幕高度：普通浏览器里是动态视口，主屏幕模式下是屏幕实际高度 */
+/* 可用的屏幕高度 */
 :root {
   --screen-h: 100dvh;
-}
-
-html.standalone {
-  --screen-h: var(--app-h, 100dvh);
 }
 
 /* body 保持透明，否则会盖住 z-index: -1 的背景光斑 */
@@ -164,6 +158,20 @@ textarea:focus-visible {
     var(--edge-top) 0%,
     var(--bg-base) 38%,
     var(--bg-base) 62%,
+    var(--edge-bottom) 100%
+  );
+}
+
+/* 盖在光斑上面的上下渐变：保证页面最上 / 最下边缘一定是纯边缘色，
+   和 Safari 状态栏、工具栏或 iOS 留出的那一截颜色无缝接上 */
+.backdrop::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    var(--edge-top) 0%,
+    transparent 14%,
+    transparent 80%,
     var(--edge-bottom) 100%
   );
 }
